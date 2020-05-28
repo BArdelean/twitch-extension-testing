@@ -1,0 +1,48 @@
+html,
+body {
+  height: 100%;
+  position: relative;
+  margin: 0px;
+  overflow: hidden;
+}
+.background-image {
+  /* background-image: url("./images/csgo-hud.png"); */
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background-position: relative;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+button {
+  width: 215px;
+  height: 50px;
+  background-color: transparent;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  font-size: 16px;
+  font-family: esl-legends;
+  margin: 11px 97px;
+  /* border: none; */
+  opacity: 0.6;
+  transition: 0.3s;
+  display: inline-block;
+  cursor: pointer;
+}
+.btn-container {
+  text-align: center;
+  margin: auto;
+  position: absolute;
+  width: 100%;
+  flex-direction: row;
+  overflow-y: hidden;
+}
+button:hover {
+  opacity: 1;
+}
+@font-face {
+  font-family: esl-legends;
+  src: url("./fonts/ESLLegend-Regular.ttf");
+}
