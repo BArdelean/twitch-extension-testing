@@ -1,9 +1,10 @@
 const WebSocket = require("ws");
 const express = require("express");
-const http = require("http");
+const https = require("https");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
+const fs = require("fs");
 
 class Server {
   constructor(port = 8080) {
@@ -23,7 +24,13 @@ class Server {
     );
 
     this.app.use(cors());
-    this.http = http.createServer(this.app);
+    this.http = https.createServer(
+      {
+        key: fs.readFileSync("../conf/server.key", "utf8"),
+        cert: fs.readFileSync("../conf/server.crt", "utf8"),
+      },
+      this.app
+    );
     this.ws = new WebSocket.Server({ server: this.http });
     this.ws.broadcast = (data) => {
       this.ws.clients.forEach((client) => {
@@ -59,13 +66,13 @@ class Server {
     res.sendStatus(200);
   }
   onGetVoteResults(req, res) {
-    this.calculatePercentages();
-    console.log(this.voteResults);
+    // this.calculatePercentages();
+    res.json(this.calculatePercentages());
     res.end();
   }
   calculatePercentages() {
     this.voteResults = { vote_results: {} };
-    if (this.viewerVotes.length >= 2) {
+    if (this.viewerVotes.length >= 1) {
       this.setVotes.forEach((element, index) => {
         let f = 0;
         for (let i in this.viewerVotes) {
@@ -87,6 +94,7 @@ class Server {
         };
       });
     }
+    return this.voteResults;
   }
 
   onWSConnect(connection, req) {
@@ -94,7 +102,8 @@ class Server {
       console.log("connection error: ", e.code);
     });
     connection.on("message", (payload) => {
-      console.log(`Payload ${payload}`);
+      console.log(`${payload}`);
+
       this.viewerVotes.push(payload);
       console.log(this.viewerVotes);
     });
