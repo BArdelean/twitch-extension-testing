@@ -26,8 +26,14 @@ class Server {
     this.app.use(cors());
     this.http = https.createServer(
       {
-        key: fs.readFileSync("../conf/server.key", "utf8"),
-        cert: fs.readFileSync("../conf/server.crt", "utf8"),
+        key: fs.readFileSync(
+          path.join(__dirname, "../conf/server.key"),
+          "utf8"
+        ),
+        cert: fs.readFileSync(
+          path.join(__dirname, "../conf/server.crt"),
+          "utf8"
+        ),
       },
       this.app
     );
