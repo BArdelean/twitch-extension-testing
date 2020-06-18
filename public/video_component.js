@@ -1,7 +1,7 @@
 jQuery(document).ready(function () {
   let twitch = window.Twitch.ext;
   let clientIp = window.location.hostname;
-  const socketAddress = "ws://3.134.100.105:8080";
+  const socketAddress = "wss://3.134.100.105:8080";
   const ws = new WebSocket(socketAddress);
   // ws.onopen = () => {
   //   twitch.onAuthorized(function (auth) {
