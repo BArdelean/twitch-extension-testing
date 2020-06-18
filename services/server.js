@@ -50,6 +50,7 @@ class Server {
     let data = req.body;
     let voteParams = JSON.parse(data);
     this.setVotes = [];
+
     this.ws.broadcast(JSON.stringify(voteParams));
     for (let i in voteParams.twitch_commands) {
       for (let j in voteParams.twitch_commands[i]) {
@@ -59,13 +60,13 @@ class Server {
     res.sendStatus(200);
   }
   onGetVoteResults(req, res) {
-    this.calculatePercentages();
-    console.log(this.voteResults);
+    // this.calculatePercentages();
+    res.json(this.calculatePercentages());
     res.end();
   }
   calculatePercentages() {
     this.voteResults = { vote_results: {} };
-    if (this.viewerVotes.length >= 2) {
+    if (this.viewerVotes.length >= 1) {
       this.setVotes.forEach((element, index) => {
         let f = 0;
         for (let i in this.viewerVotes) {
@@ -87,6 +88,7 @@ class Server {
         };
       });
     }
+    return this.voteResults;
   }
 
   onWSConnect(connection, req) {
@@ -94,7 +96,8 @@ class Server {
       console.log("connection error: ", e.code);
     });
     connection.on("message", (payload) => {
-      console.log(`Payload ${payload}`);
+      console.log(`${payload}`);
+
       this.viewerVotes.push(payload);
       console.log(this.viewerVotes);
     });

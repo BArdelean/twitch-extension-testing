@@ -6,7 +6,7 @@ body {
   overflow: hidden;
 }
 .background-image {
-  background-image: url("./images/BackgroundAllDark_4k.jpg");
+  background-image: url("./images/BackgroundAllDark_4k.png");
   height: 100%;
   width: 100%;
   padding: 0;
@@ -59,36 +59,10 @@ button {
   margin: auto;
   position: absolute;
   width: 840px;
-  flex-direction: row;
+  /* flex-direction: row; */
   overflow-y: hidden;
-  /* top: 50%;
-  left: 50%;
-  -ms-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%); */
   animation: slideMe 0.5s ease-in;
 }
-/* @keyframes slideMe {
-  0% {
-    transform: skewX(50deg) translateX(200px);
-    opacity: 0;
-  }
-  60% {
-    transform: translateX(0px);
-  }
-  70% {
-    transform: skew(-20deg);
-  }
-  80% {
-    transform: skew(0deg), translate(0);
-  }
-  90% {
-    transform: skew(-5deg);
-  }
-  100% {
-    transform: skew(0deg);
-    opacity: 1;
-  }
-} */
 
 @keyframes slideMe {
   0% {

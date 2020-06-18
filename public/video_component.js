@@ -1,11 +1,21 @@
 jQuery(document).ready(function () {
-  clientIp = window.location.hostname;
-
-  const socketAddress = `ws://` + clientIp + `:8080`;
+  let twitch = window.Twitch.ext;
+  let clientIp = window.location.hostname;
+  const socketAddress = "ws://" + clientIp + ":8080";
   const ws = new WebSocket(socketAddress);
+  // ws.onopen = () => {
+  //   twitch.onAuthorized(function (auth) {
+  //     // save our credentials
+  //     token = auth.token;
+  //     tuid = auth.userId;
+  //   });
+  //   ws.send(token);
+  // };
 
   ws.onmessage = function incoming(message) {
     let theMessage = JSON.parse(message.data);
+    console.log(theMessage);
+
     $(".background-image").html("");
     $(".background-image").append("<div class=btn-container></div>");
     $(".btn-container").append(
