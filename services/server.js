@@ -1,15 +1,18 @@
 const WebSocket = require("ws");
 const express = require("express");
 const http = require("http");
+const https = require("https");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
+const fs = require("fs");
 
 class Server {
   constructor(port = 8080) {
     this.app = null;
     this.client = null;
     this.http = null;
+    this.https = null;
     this.viewerVotes = [];
     this.createServers(port);
   }
@@ -21,10 +24,13 @@ class Server {
         type: "application/json",
       })
     );
-
+    var options = {
+      key: fs.readFileSync("client-key.pem"),
+      cert: fs.readFileSync("client-cert.pem"),
+    };
     this.app.use(cors());
-    this.http = http.createServer(this.app);
-    this.ws = new WebSocket.Server({ server: this.http });
+    this.https = https.createServer(options, this.app);
+    this.ws = new WebSocket.Server({ server: this.https });
     this.ws.broadcast = (data) => {
       this.ws.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
@@ -37,8 +43,8 @@ class Server {
     this.app.post("/control/set-vote-params", this.onSetVoteParams.bind(this));
     this.app.get("/vote-results", this.onGetVoteResults.bind(this));
 
-    this.http.listen(port, () => {
-      console.log("Server started on port %d", this.http.address().port);
+    this.https.listen(port, () => {
+      console.log("Server started on port %d", this.https.address().port);
     });
   }
 
