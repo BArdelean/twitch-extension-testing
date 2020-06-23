@@ -11,13 +11,29 @@ jQuery(document).ready(function () {
   //     });
   //     ws.send(token);
   //   };
-
+  setInterval(function () {
+    $.get("https://3.134.100.105:8080/vote-results", (percentages) => {
+      if (percentages.vote_results.slot_1.percentages === "undefined") {
+      } else {
+        $(".perc1").html("");
+        $(".perc2").html("");
+        $(".perc1").append(percentages.vote_results.slot_1.percentages + "%");
+        $(".perc2").append(percentages.vote_results.slot_2.percentages + "%");
+      }
+    });
+  }, 1000);
   ws.onmessage = function incoming(message) {
     let theMessage = JSON.parse(message.data);
     console.log(theMessage);
+    if (theMessage.stop_voting === true) {
+      $(".team-votes-container").html("");
+    }
     if (theMessage.team_votes === true) {
       $(".team-votes-container").html("");
       $(".team-votes-container").append("<div class=btn-container1></div>");
+      $(".team-votes-container").append(
+        "<div class=percentage-container><span class=perc1></span><span class=perc2></span></div>"
+      );
       for (let i in theMessage.twitch_commands) {
         for (let j in theMessage.twitch_commands[i]) {
           console.log(theMessage.twitch_commands[i][j].name);
@@ -26,11 +42,13 @@ jQuery(document).ready(function () {
           );
         }
       }
+
       $("button").one("click", function () {
         $(this).find(".button1").attr("disabled", "disabled");
-        $(".team-votes-container").html("");
+        $(".btn-container1").html("");
       });
     } else if (theMessage.individual_votes === true) {
+      $(".team-votes-container").html("");
       $(".team-votes-container").append(
         "<div class=individual-votes-container></div>"
       );
@@ -63,6 +81,5 @@ jQuery(document).ready(function () {
 
   clickReply = (clicked_id) => {
     ws.send(clicked_id);
-    // ws.close();
   };
 });
