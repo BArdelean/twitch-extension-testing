@@ -1,11 +1,11 @@
 jQuery(document).ready(function () {
   let twitch = window.Twitch.ext;
   let clientIp = window.location.hostname;
-  const socketAddress = "wss://localhost:8080/";
+  const socketAddress = "wss://3.134.100.105:8080/";
   const ws = new WebSocket(socketAddress);
   let percentage = null;
   setInterval(function () {
-    $.get("https://localhost:8080/vote-results", (percentages) => {
+    $.get("https://3.134.100.105:8080/vote-results", (percentages) => {
       percentage = percentages;
       if (
         Object.keys(percentages.vote_results).length === 0 &&
