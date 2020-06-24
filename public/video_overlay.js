@@ -1,7 +1,7 @@
 jQuery(document).ready(function () {
   let twitch = window.Twitch.ext;
   let clientIp = window.location.hostname;
-  const socketAddress = "wss://3.134.100.105:8080";
+  const socketAddress = "wss://localhost:8080";
   const ws = new WebSocket(socketAddress);
   //   ws.onopen = () => {
   //     twitch.onAuthorized(function (auth) {
@@ -11,17 +11,7 @@ jQuery(document).ready(function () {
   //     });
   //     ws.send(token);
   //   };
-  setInterval(function () {
-    $.get("https://3.134.100.105:8080/vote-results", (percentages) => {
-      if (percentages.vote_results.slot_1.percentages === "undefined") {
-      } else {
-        $(".perc1").html("");
-        $(".perc2").html("");
-        $(".perc1").append(percentages.vote_results.slot_1.percentages + "%");
-        $(".perc2").append(percentages.vote_results.slot_2.percentages + "%");
-      }
-    });
-  }, 1000);
+
   ws.onmessage = function incoming(message) {
     let theMessage = JSON.parse(message.data);
     console.log(theMessage);
@@ -29,6 +19,24 @@ jQuery(document).ready(function () {
       $(".team-votes-container").html("");
     }
     if (theMessage.team_votes === true) {
+      setInterval(function () {
+        $.get("https://localhost:8080/vote-results", (percentages) => {
+          if (
+            Object.keys(percentages.vote_results).length === 0 &&
+            percentages === Object
+          ) {
+          } else {
+            $(".perc1").html("");
+            $(".perc2").html("");
+            $(".perc1").append(
+              percentages.vote_results.slot_1.percentages + "%"
+            );
+            $(".perc2").append(
+              percentages.vote_results.slot_2.percentages + "%"
+            );
+          }
+        });
+      }, 1000);
       $(".team-votes-container").html("");
       $(".team-votes-container").append("<div class=btn-container1></div>");
       $(".team-votes-container").append(
@@ -72,9 +80,28 @@ jQuery(document).ready(function () {
       $("button").one("click", function () {
         $(this).find(".button2").attr("disabled", "disabled");
         $(".individual-votes-container").html("");
-        $(".individual-votes-container").append(
-          `<span class=thank-you>Thank you for voting!</span>`
-        );
+        setInterval(function () {
+          $.get("https://localhost:8080/vote-results", (percentages) => {
+            $(".individual-votes-container").html("");
+            if (
+              Object.keys(percentages.vote_results).length === 0 &&
+              percentages === Object
+            ) {
+            } else {
+              for (let i in percentages.vote_results) {
+                console.log(percentages.vote_results[i]);
+                console.log(percentages.vote_results[i].name);
+                $(".individual-votes-container").append(
+                  `<span class=thank-you> ${percentages.vote_results[i].name} - ${percentages.vote_results[i].percentages}%</span>`
+                );
+              }
+            }
+          });
+        }, 1000);
+
+        // $(".individual-votes-container").append(
+        //   `<span class=thank-you>Thank you for voting!</span>`
+        // );
       });
     }
   };
