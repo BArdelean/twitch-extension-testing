@@ -1,7 +1,7 @@
 jQuery(document).ready(function () {
   let twitch = window.Twitch.ext;
   let clientIp = window.location.hostname;
-  const socketAddress = "wss://localhost:8080";
+  const socketAddress = "wss://3.134.100.105:8080";
   const ws = new WebSocket(socketAddress);
   //   ws.onopen = () => {
   //     twitch.onAuthorized(function (auth) {
@@ -20,7 +20,7 @@ jQuery(document).ready(function () {
     }
     if (theMessage.team_votes === true) {
       setInterval(function () {
-        $.get("https://localhost:8080/vote-results", (percentages) => {
+        $.get("https://3.134.100.105:8080/vote-results", (percentages) => {
           if (
             Object.keys(percentages.vote_results).length === 0 &&
             percentages === Object
@@ -81,7 +81,7 @@ jQuery(document).ready(function () {
         $(this).find(".button2").attr("disabled", "disabled");
         $(".individual-votes-container").html("");
         setInterval(function () {
-          $.get("https://localhost:8080/vote-results", (percentages) => {
+          $.get("https://3.134.100.105:8080/vote-results", (percentages) => {
             $(".individual-votes-container").html("");
             if (
               Object.keys(percentages.vote_results).length === 0 &&
