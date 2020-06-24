@@ -6,7 +6,7 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  /* background-image: url("./images/csgo-hud.png"); */
+  background-image: url("./images/csgo-hud.png");
   overflow: hidden;
 }
 .team-votes-container {
@@ -110,13 +110,13 @@ button:hover {
 .thank-you {
   margin: auto;
   position: relative;
-  display: flex;
-  flex-direction: row;
-  row-gap: space-between;
-  /* -ms-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%); */
+  /* display: flex; */
+  /* flex-direction: row; */
+  justify-content: space-between;
+  /* -ms-transform: translate(-50%, -50%); */
+  /* transform: translate(-50%, -50%);  */
   font-family: esl-legends;
-  font-size: 150%;
+  font-size: 200%;
   color: white;
 }
 .category {

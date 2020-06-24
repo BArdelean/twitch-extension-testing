@@ -56,7 +56,9 @@ class Server {
     let data = req.body;
     let voteParams = JSON.parse(data);
     this.setVotes = [];
-
+    if (voteParams.stop_voting === true) {
+      this.viewerVotes = [];
+    }
     this.ws.broadcast(JSON.stringify(voteParams));
     for (let i in voteParams.twitch_commands) {
       for (let j in voteParams.twitch_commands[i]) {
