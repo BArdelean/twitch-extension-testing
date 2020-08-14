@@ -124,17 +124,22 @@ class Server {
       this.filteredVoteParams = Object.entries(
         voteParams.viewer_interaction.custom_options
       ).reduce((a, [k, v]) => (v ? ((a[k] = v), a) : a), {});
+      delete this.filteredVoteParams.question;
     }
-
+    console.log(this.filteredVoteParams);
+    console.log(voteParams);
     if (voteParams.viewer_interaction.start_custom === true) {
       this.ws.broadcast(JSON.stringify(this.filteredVoteParams));
       delete this.filteredVoteParams.position;
+
       for (let item in this.filteredVoteParams) {
         this.setVotes.push(this.filteredVoteParams[item]);
       }
+      console.log(this.setVotes);
     } else if (voteParams.viewer_interaction.start_mvp === true) {
       this.ws.broadcast(JSON.stringify(this.playerNames));
     } else if (voteParams.viewer_interaction.stop_voting === true) {
+      this.ws.broadcast(JSON.stringify({ stop_voting: true }));
       this.viewerVotes = [];
     }
     res.sendStatus(200);
@@ -166,18 +171,15 @@ class Server {
         } else {
           percentage = (f / this.viewerVotes.length) * 100;
         }
-        console.log(percentage);
         this.setVotingParams.viewer_interaction.custom_options[
           "option" + (index + 1)
         ] = element;
         this.setVotingParams.viewer_interaction.custom_options[
           "percentage" + (index + 1)
         ] = Number(percentage.toFixed(0));
-        //  {
-        //   name: element,
-        //   command: "",
-        //   percentages: Number(percentage.toFixed(0)),
-        // };
+        this.setVotingParams.viewer_interaction.custom_options[
+          "image" + (index + 1)
+        ] = "option" + (index + 1) + "_image";
       });
     }
     return this.setVotingParams;
