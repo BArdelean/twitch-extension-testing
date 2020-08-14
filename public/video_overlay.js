@@ -1,88 +1,110 @@
 jQuery(document).ready(function () {
-  let twitch = window.Twitch.ext;
-  let clientIp = window.location.hostname;
-  const socketAddress = "wss://3.134.100.105:8080/";
+  const socketAddress = "ws://localhost:8080";
   const ws = new WebSocket(socketAddress);
-  let percentage = null;
-  setInterval(function () {
-    $.get("https://3.134.100.105:8080/vote-results", (percentages) => {
-      percentage = percentages;
-      if (
-        Object.keys(percentages.vote_results).length === 0 &&
-        percentages === Object
-      ) {
-      } else {
-        $(".perc1").html("");
-        $(".perc2").html("");
-        $(".perc1").append(percentage.vote_results.slot_1.percentages + "%");
-        $(".perc2").append(percentage.vote_results.slot_2.percentages + "%");
-        $(".thank-you").html("");
-        for (let i in percentage.vote_results) {
-          $(".thank-you").append(
-            `<span> ${percentage.vote_results[i].name} - ${percentage.vote_results[i].percentages}% </span>`
-          );
-        }
-      }
-    });
 
-    ws.onmessage = function incoming(message) {
-      let theMessage = JSON.parse(message.data);
-      if (theMessage.stop_voting === true) {
-        $(".team-votes-container").html("");
-      }
-
-      if (theMessage.team_votes === true) {
-        $(".team-votes-container").html("");
-        $(".team-votes-container").append("<div class=btn-container1></div>");
+  ws.onmessage = function incoming(message) {
+    let payload = JSON.parse(message.data);
+    console.log(payload);
+    if (payload.stop_voting === true) {
+      $(".votes-container").html("");
+    }
+    //
+    if (payload.position === "team_votes") {
+      $(".votes-container").html("");
+      $(".votes-container").append("<div class=team-votes-container></div>");
+      delete payload.position;
+      for (item in payload) {
         $(".team-votes-container").append(
-          "<div class=percentage-container><span class=perc1></span><span class=perc2></span></div>"
+          `<button id = "${payload[item]}" class="button1"></button>`
         );
-        for (let i in theMessage.twitch_commands) {
-          for (let j in theMessage.twitch_commands[i]) {
-            $(".btn-container1").append(
-              `<button id = "${theMessage.twitch_commands[i][j].name}" class="button1" onClick = clickReply(this.id)></button>`
-            );
-          }
-        }
-
-        $("button").one("click", function () {
-          $(this).find(".button1").attr("disabled", "disabled");
-          $(".btn-container1").html("");
-        });
-      } else if (theMessage.individual_votes === true) {
-        $(".team-votes-container").html("");
-        $(".team-votes-container").append(
-          "<div class=individual-votes-container></div>"
-        );
-        $(".individual-votes-container").html("");
-        $(".individual-votes-container").append(
-          "<div class=btn-container2></div>"
-        );
-        $(".btn-container2").append(
-          `<span class=category>Vote for your favorite ${Object.keys(
-            theMessage.twitch_commands
-          )}!</span><br>`
-        );
-        for (let i in theMessage.twitch_commands) {
-          for (let j in theMessage.twitch_commands[i]) {
-            $(".btn-container2").append(
-              `<button id = "${theMessage.twitch_commands[i][j].name}" class="button2" onClick = clickReply(this.id)>${theMessage.twitch_commands[i][j].name}</button>`
-            );
-          }
-        }
-
-        $("button").one("click", function () {
-          $(this).find(".button2").attr("disabled", "disabled");
-          // $(this).find(".thank-you").attr("enabled", "enabled");
-          $(".individual-votes-container").html("");
-          $(".individual-votes-container").append(
-            `<div class=thank-you>Thank you for voting!</div>`
-          );
-        });
       }
-    };
-    clickReply = (clicked_id) => {
-      ws.send(clicked_id);
-    };
-  }, 1000);
+
+      $("button").on("click", function () {
+        ws.send(this.id);
+        $(this).find(".button1").attr("disabled", "disabled");
+        $(".team-votes-container").html("");
+      });
+      //
+    } else if (payload.position === "left_horizontal") {
+      $(".votes-container").html("");
+      $(".votes-container").append("<div class=left_horizontal></div>");
+
+      delete payload.position;
+      for (let item in payload) {
+        $(".left_horizontal").append(
+          `<button id = "${payload[item]}" class="button2"></button>`
+        );
+      }
+
+      $("button").on("click", function () {
+        ws.send(this.id);
+        $(this).find(".button2").attr("disabled", "disabled");
+        $(".votes-container").html("");
+      });
+      //
+    } else if (payload.position === "left_vertical") {
+      $(".votes-container").html("");
+      $(".votes-container").append("<div class=left_vertical></div>");
+      delete payload.position;
+
+      for (let item in payload) {
+        $(".left_vertical").append(
+          `<button id = "${payload[item]}" class="button3" ></button>`
+        );
+      }
+      $("button").on("click", function () {
+        ws.send(this.id);
+        $(this).find(".button3").attr("disabled", "disabled");
+        $(".votes-container").html("");
+      });
+      //
+    } else if (payload.position === "left_vertical_text") {
+      $(".votes-container").html("");
+      $(".votes-container").append("<div class=left_vertical_text></div>");
+      delete payload.position;
+      for (let item in payload) {
+        $(".left_vertical_text").append(
+          `<button id = "${payload[item]}" class="button4"></button>`
+        );
+      }
+      $("button").one("click", function () {
+        ws.send(this.id);
+        $(":button").prop("disabled", true);
+        $(".votes-container").html("");
+      });
+      //
+    } else if (payload.position === "right_horizontal") {
+      $(".votes-container").html("");
+      $(".votes-container").append("<div class=right_horizontal></div>");
+      delete payload.position;
+      for (let item in payload) {
+        $(".right_horizontal").append(
+          `<button id = "${payload[item]}" class="button5"></button>`
+        );
+      }
+      $("button").on("click", function () {
+        ws.send(this.id);
+        $(this).find(".button5").attr("disabled", "disabled");
+        $(".votes-container").html("");
+      });
+    } else if (payload.hasOwnProperty("mvp_options")) {
+      $(".votes-container").html("");
+      $(".votes-container").append("<div class=player-votes-container></div>");
+      for (let item in payload.mvp_options) {
+        $(".player-votes-container").append(
+          `<button id = "${payload.mvp_options[item]}" class="button6" ></button>`
+        );
+      }
+
+      $("button").on("click", function () {
+        ws.send(this.id);
+        $(this).find(".button6").attr("disabled", "disabled");
+        $(".player-votes-container").html("");
+      });
+    }
+    setTimeout(() => {
+      $(this).find("button").attr("disabled", "disabled");
+      $(".votes-container").html("");
+    }, 60000);
+  };
 });
