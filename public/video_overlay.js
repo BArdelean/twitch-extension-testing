@@ -1,5 +1,5 @@
 jQuery(document).ready(function () {
-  const socketAddress = "ws://localhost:8080";
+  const socketAddress = "ws://18.197.111.84:8080";
   const ws = new WebSocket(socketAddress);
 
   ws.onmessage = function incoming(message) {
