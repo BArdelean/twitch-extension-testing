@@ -6,6 +6,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
 const fs = require("fs");
+const { json } = require("express");
 
 class Server {
   constructor(port = 8080) {
@@ -14,6 +15,58 @@ class Server {
     this.http = null;
     this.https = null;
     this.viewerVotes = [];
+    this.curentVotingSection = null;
+    this.filteredVoteParams = null;
+    this.setVotingParams = {
+      viewer_interaction: {
+        custom_options: {
+          question: "",
+          position: "",
+          option1: "",
+          option2: "",
+          option3: "",
+          option4: "",
+          image1: "",
+          image2: "",
+          image3: "",
+          image4: "",
+          percentage1: "",
+          percentage2: "",
+          percentage3: "",
+          percentage4: "",
+        },
+        mvp_options: {
+          team1: {
+            team: "",
+            player1: "",
+            player2: "",
+            player3: "",
+            player4: "",
+            player5: "",
+            percentage1: "",
+            percentage2: "",
+            percentage3: "",
+            percentage4: "",
+            percentage5: "",
+          },
+          team2: {
+            team: "",
+            player1: "",
+            player2: "",
+            player3: "",
+            player4: "",
+            player5: "",
+            percentage1: "",
+            percentage2: "",
+            percentage3: "",
+            percentage4: "",
+            percentage5: "",
+          },
+        },
+      },
+    };
+
+    this.playerNames = null;
     this.createServers(port);
   }
 
@@ -29,8 +82,8 @@ class Server {
       cert: fs.readFileSync("client-cert.pem"),
     };
     this.app.use(cors());
-    this.https = https.createServer(options, this.app);
-    this.ws = new WebSocket.Server({ server: this.https });
+    this.http = http.createServer(this.app);
+    this.ws = new WebSocket.Server({ server: this.http });
     this.ws.broadcast = (data) => {
       this.ws.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
@@ -41,10 +94,14 @@ class Server {
     this.app.use("/", express.static(path.join(__dirname, "../public")));
     this.ws.on("connection", this.onWSConnect.bind(this));
     this.app.post("/control/set-vote-params", this.onSetVoteParams.bind(this));
+    this.app.post(
+      "/control/set-player-names",
+      this.onSetPlayerNames.bind(this)
+    );
     this.app.get("/vote-results", this.onGetVoteResults.bind(this));
 
-    this.https.listen(port, () => {
-      console.log("Server started on port %d", this.https.address().port);
+    this.http.listen(port, () => {
+      console.log("Server started on port %d", this.http.address().port);
     });
   }
 
@@ -56,24 +113,45 @@ class Server {
     let data = req.body;
     let voteParams = JSON.parse(data);
     this.setVotes = [];
-    if (voteParams.stop_voting === true) {
-      this.viewerVotes = [];
+    // this.setVotingParams.viewer_interaction.custom_options =
+    //   voteParams.viewer_interaction.custom_options;
+    // this.filteredVoteParams = Object.entries(
+    //   voteParams.viewer_interaction.custom_options
+    // ).reduce((a, [k, v]) => (v ? ((a[k] = v), a) : a), {});
+    if ("custom_options" in voteParams.viewer_interaction) {
+      this.setVotingParams.viewer_interaction.custom_options =
+        voteParams.viewer_interaction.custom_options;
+      this.filteredVoteParams = Object.entries(
+        voteParams.viewer_interaction.custom_options
+      ).reduce((a, [k, v]) => (v ? ((a[k] = v), a) : a), {});
     }
-    this.ws.broadcast(JSON.stringify(voteParams));
-    for (let i in voteParams.twitch_commands) {
-      for (let j in voteParams.twitch_commands[i]) {
-        this.setVotes.push(voteParams.twitch_commands[i][j].name);
+
+    if (voteParams.viewer_interaction.start_custom === true) {
+      this.ws.broadcast(JSON.stringify(this.filteredVoteParams));
+      delete this.filteredVoteParams.position;
+      for (let item in this.filteredVoteParams) {
+        this.setVotes.push(this.filteredVoteParams[item]);
       }
+    } else if (voteParams.viewer_interaction.start_mvp === true) {
+      this.ws.broadcast(JSON.stringify(this.playerNames));
+    } else if (voteParams.viewer_interaction.stop_voting === true) {
+      this.viewerVotes = [];
     }
     res.sendStatus(200);
   }
   onGetVoteResults(req, res) {
-    // this.calculatePercentages();
     res.json(this.calculatePercentages());
     res.end();
   }
+
+  onSetPlayerNames(req, res) {
+    let data = req.body;
+    this.playerNames = JSON.parse(data);
+    console.log(this.playerNames);
+    res.sendStatus(200);
+  }
+
   calculatePercentages() {
-    this.voteResults = { vote_results: {} };
     if (this.viewerVotes.length >= 1) {
       this.setVotes.forEach((element, index) => {
         let f = 0;
@@ -89,14 +167,20 @@ class Server {
           percentage = (f / this.viewerVotes.length) * 100;
         }
         console.log(percentage);
-        this.voteResults.vote_results["slot_" + (index + 1)] = {
-          name: element,
-          command: "",
-          percentages: Number(percentage.toFixed(0)),
-        };
+        this.setVotingParams.viewer_interaction.custom_options[
+          "option" + (index + 1)
+        ] = element;
+        this.setVotingParams.viewer_interaction.custom_options[
+          "percentage" + (index + 1)
+        ] = Number(percentage.toFixed(0));
+        //  {
+        //   name: element,
+        //   command: "",
+        //   percentages: Number(percentage.toFixed(0)),
+        // };
       });
     }
-    return this.voteResults;
+    return this.setVotingParams;
   }
 
   onWSConnect(connection, req) {
