@@ -1,9 +1,33 @@
 {
   "allowHttpBackend": false,
-  "backendCommand": "",
-  "backendFolderName": "",
+  "backendCommand": "node server.js",
+  "backendFolderName": "services",
   "certificateExceptions": [],
-  "extensionViews": [],
+  "extensionViews": [
+    {
+      "channelId": "35667264",
+      "configurationAnchor": "video_overlay",
+      "displayChannelName": "dadum1337",
+      "features": {
+        "isBitsEnabled": false,
+        "isChatEnabled": false,
+        "isSubscriptionStatusAvailable": false
+      },
+      "frameSize": {
+        "width": 1280,
+        "height": 720
+      },
+      "id": "1",
+      "isPopout": false,
+      "label": "",
+      "linked": false,
+      "linkedUserId": "",
+      "opaqueId": "235623",
+      "orientation": "Portrait",
+      "type": "video_overlay",
+      "viewerType": "Logged-In Viewer"
+    }
+  ],
   "manifest": {
     "anchor": "video_overlay",
     "assetUrls": [],
@@ -17,10 +41,10 @@
     "hasChatSupport": false,
     "iconUrl": "",
     "iconUrls": {},
-    "id": "6hgq0zm30ywix1sdzxvfmhnjxzi6c8",
+    "id": "hy5mcjkjsorhw3m33ma0xb3zt75fej",
     "installationCount": -42,
     "liveConfigUrl": "",
-    "name": "some rando test",
+    "name": "esl_fan_interaction",
     "panelHeight": 0,
     "privacyPolicyUrl": "",
     "requestIdentityLink": false,
@@ -52,7 +76,7 @@
     "whitelistedPanelUrls": []
   },
   "frontendCommand": "",
-  "frontendFolderName": "",
-  "name": "some rando test",
+  "frontendFolderName": "public",
+  "name": "esl_fan_interaction",
   "version": 2
 }
