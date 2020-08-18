@@ -109,7 +109,7 @@ class Server {
   }
   onIncomingVote(req, res) {
     console.log(req.body);
-    let viewerVote = JSON.parse(req.body);
+        let viewerVote = JSON.parse(req.body);
     if (this.verifyAndDecode(req.headers.authorization)) {
       this.viewerVotes.push(viewerVote.vote);
     }
