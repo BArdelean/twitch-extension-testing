@@ -7,23 +7,24 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const fs = require("fs");
 const { json } = require("express");
-const jsonwebtoken = require('jsonwebtoken')
-const request = require('request')
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+const jsonwebtoken = require("jsonwebtoken");
+const got = require("got");
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 class Server {
   constructor(port = 8080) {
-    this.serverTokenDurationSec = 30
-    this.bearerPrefix = 'Bearer ';
-    this.secret = 'xPAxcyCsX8QkYHTo4HtGWJfy3MSkfBFD6l5DNfDVNjY='
-    this.clientId = 'uxmajdvtdy870ig106jnk04jg6e50y'
-    this.ownerID = '35667264'
+    this.serverTokenDurationSec = 30;
+    this.bearerPrefix = "Bearer ";
+    this.secret = "homAe3Ar/qzPyTJ5iTT8bYO3YJgDVEIQIbfn/Lcb8FY=";
+    this.clientId = "08lc1o0s6c3cejh2dtzaq4qaeyq7yd";
+    this.ownerID = "35667264";
+    this.channel_id = "35667264";
     this.app = null;
     this.client = null;
     this.http = null;
     this.https = null;
     this.viewerVotes = [];
-    this.extSecret = Buffer.from(this.secret, 'base64')
+    this.extSecret = Buffer.from(this.secret, "base64");
     this.curentVotingSection = null;
     this.filteredVoteParams = null;
     this.setVotingParams = {
@@ -74,7 +75,7 @@ class Server {
         },
       },
     };
-    this.channel_id = '35667264'
+    this.channel_id = "35667264";
     this.playerNames = null;
     this.createServers(port);
   }
@@ -89,41 +90,30 @@ class Server {
 
     this.app.use(cors());
     this.http = http.createServer(this.app);
-    this.ws = new WebSocket.Server({ server: this.http });
-    this.ws.broadcast = (data) => {
-      this.ws.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(data);
-        }
-      });
-    };
     this.app.use("/", express.static(path.join(__dirname, "../public")));
-    this.ws.on("connection", this.onWSConnect.bind(this));
     this.app.post("/control/set-vote-params", this.onSetVoteParams.bind(this));
     this.app.post(
       "/control/set-player-names",
       this.onSetPlayerNames.bind(this)
     );
-    this.app.post('/control/send-vote', this.onIncomingVote.bind(this));
+    this.app.post("/control/send-vote", this.onIncomingVote.bind(this));
     this.app.get("/vote-results", this.onGetVoteResults.bind(this));
 
     this.http.listen(port, () => {
       console.log("Server started on port %d", this.http.address().port);
     });
-    console.log(this.secret)
-    console.log(this.extSecret)
   }
-  
 
   stop() {
-    this.ws.close();
     this.http.close();
   }
-  onIncomingVote(req, res){
-    this.verifyAndDecode(req.headers.authorization);
-    let payload = JSON.parse(req.body)
-    this.viewerVotes.push(payload.vote);
-    res.sendStatus(200)
+  onIncomingVote(req, res) {
+    console.log(req.body);
+    let viewerVote = JSON.parse(req.body);
+    if (this.verifyAndDecode(req.headers.authorization)) {
+      this.viewerVotes.push(viewerVote.vote);
+    }
+    res.sendStatus(200);
   }
   onSetVoteParams(req, res) {
     let data = req.body;
@@ -138,19 +128,15 @@ class Server {
       delete this.filteredVoteParams.question;
     }
     if (voteParams.viewer_interaction.start_custom === true) {
-      this.sendBroadcast(JSON.stringify(this.filteredVoteParams));
-      // this.ws.broadcast(JSON.stringify(this.filteredVoteParams));
+      this.sendBroadcast(this.filteredVoteParams);
       delete this.filteredVoteParams.position;
 
       for (let item in this.filteredVoteParams) {
         this.setVotes.push(this.filteredVoteParams[item]);
       }
-      console.log(this.setVotes);
     } else if (voteParams.viewer_interaction.start_mvp === true) {
-      this.sendBroadcast(this.channel_id, JSON.stringify(this.playerNames));
-      this.ws.broadcast(JSON.stringify(this.playerNames));
+      this.sendBroadcast(this.channel_id, this.playerNames);
     } else if (voteParams.viewer_interaction.stop_voting === true) {
-      this.ws.broadcast(JSON.stringify({ stop_voting: true }));
       this.viewerVotes = [];
     }
     res.sendStatus(200);
@@ -165,53 +151,49 @@ class Server {
     this.playerNames = JSON.parse(data);
     res.sendStatus(200);
   }
-   verifyAndDecode(header){
-
-    console.log(this.secret)
-    console.log(this.extSecret)
+  verifyAndDecode(header) {
     if (header.startsWith(this.bearerPrefix)) {
-      
-        let token = header.substring(this.bearerPrefix.length);
-        console.log(token)
-        return jsonwebtoken.verify(token, this.extSecret);
-    }}
-    makeServerToken() {
-  const payload = {
-    exp: Math.floor(Date.now() / 1000) + this.serverTokenDurationSec,
-    channel_id: this.channel_id,
-    user_id: this.ownerId, // extension owner ID for the call to Twitch PubSub
-    role: 'external',
-    pubsub_perms: {
-      send: ['*'],
-    },
-  };
-  console.log(jsonwebtoken.sign(payload, this.secret, { algorithm: 'HS256' }))
-  return jsonwebtoken.sign(payload, this.secret, { algorithm: 'HS256' });
-}
-sendBroadcast(payload){
-  const headers = {
-    'Client-ID': this.clientId,
-    'Content-Type': 'application/json',
-    'Authorization': this.bearerPrefix + this.makeServerToken(),
-  };
-  
-  
-  // Create the POST body for the Twitch API request.
-  const body = JSON.stringify({
-    content_type: 'application/json',
-    message: payload,
-    targets: ['broadcast'],
-  });
-console.log(body)
-  // Send the broadcast request to the Twitch API.
-  request(
-    `https://api.twitch.tv/extensions/message/${this.channel_id}`,
-    {
-      method: 'POST',
-      headers,
-      body,
-    })
-}
+      let token = header.substring(this.bearerPrefix.length);
+      return jsonwebtoken.verify(token, this.extSecret);
+    }
+  }
+  createServerToken() {
+    const payload = {
+      exp:
+        Math.floor(new Date().getTime() / 1000) + this.serverTokenDurationSec,
+      channel_id: this.channel_id,
+      user_id: this.ownerID,
+      role: "external",
+      pubsub_perms: {
+        send: ["broadcast"],
+      },
+    };
+    return jsonwebtoken.sign(payload, this.extSecret);
+  }
+  sendBroadcast(payload) {
+    let headers = {
+      Authorization: this.bearerPrefix + this.createServerToken(),
+      "Client-ID": this.clientId,
+      "Content-Type": "application/json",
+    };
+    let body = JSON.stringify({
+      content_type: "application/json",
+      message: JSON.stringify(payload),
+      targets: ["broadcast"],
+    });
+    got
+      .post(`https://api.twitch.tv/extensions/message/${this.channel_id}`, {
+        method: "POST",
+        headers,
+        body,
+      })
+      .then((resp) => {
+        console.log(resp.statuCode);
+      })
+      .catch((err) => {
+        console.log(err.response.body);
+      });
+  }
   calculatePercentages() {
     if (this.viewerVotes.length >= 1) {
       this.setVotes.forEach((element, index) => {
@@ -239,18 +221,6 @@ console.log(body)
       });
     }
     return this.setVotingParams;
-  }
-
-  onWSConnect(connection, req) {
-    connection.on("error", (e) => {
-      console.log("connection error: ", e.code);
-    });
-    connection.on("message", (payload) => {
-      console.log(`${payload}`);
-
-      this.viewerVotes.push(payload);
-      console.log(this.viewerVotes);
-    });
   }
 }
 

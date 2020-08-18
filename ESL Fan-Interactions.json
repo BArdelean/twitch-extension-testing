@@ -22,10 +22,9 @@
       "label": "",
       "linked": false,
       "linkedUserId": "",
-      "opaqueId": "235623",
       "orientation": "Portrait",
       "type": "video_overlay",
-      "viewerType": "Logged-In Viewer"
+      "viewerType": "Broadcaster"
     }
   ],
   "manifest": {
@@ -41,10 +40,10 @@
     "hasChatSupport": false,
     "iconUrl": "",
     "iconUrls": {},
-    "id": "hy5mcjkjsorhw3m33ma0xb3zt75fej",
+    "id": "08lc1o0s6c3cejh2dtzaq4qaeyq7yd",
     "installationCount": -42,
     "liveConfigUrl": "",
-    "name": "esl_fan_interaction",
+    "name": "ESL Fan-Interactions",
     "panelHeight": 0,
     "privacyPolicyUrl": "",
     "requestIdentityLink": false,
@@ -77,6 +76,6 @@
   },
   "frontendCommand": "",
   "frontendFolderName": "public",
-  "name": "esl_fan_interaction",
+  "name": "ESL Fan-Interactions",
   "version": 2
 }
