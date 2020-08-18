@@ -9,12 +9,12 @@ window.Twitch.ext.onAuthorized(function (auth) {
 });
 function disableButton(){
 
-        $(":button").prop("disabled", true);
-        $(".votes-container").html("");
-      
+  $(":button").prop("disabled", true);
+  $(".votes-container").html("");    
 }
 function updateBlock(payload) {
   let block = JSON.parse(payload);
+  console.log(block)
   $(".votes-container").html("");
   $(".votes-container").append(`<div class="${block.position}"></div>`)
   for(let item in block){
@@ -36,7 +36,7 @@ function updateBlock(payload) {
   })})
   if (block.stop_voting === true) {
     $(".votes-container").html("");
-  }
+  }}
 $(function () {
   // listen for incoming broadcast message from our EBS
   window.Twitch.ext.listen("broadcast", function (
@@ -46,4 +46,4 @@ $(function () {
   ) {
     updateBlock(message);
   })
-})}
+})
