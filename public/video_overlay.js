@@ -14,13 +14,23 @@ function disableButton(){
 }
 function updateBlock(payload) {
   let block = JSON.parse(payload);
-  console.log(block)
-  $(".votes-container").html("");
-  $(".votes-container").append(`<div class="${block.position}"></div>`)
+  if (!block.position){
+    $(".votes-container").html("");
+    $(".votes-container").append(`<div class=team1></div><div class=team2></div>`)
+    for(let player in block.players.team1){
+      for (let player in block.players[team]){
+      $(`.team1`).append(`<button id = "${block.players[team][player]}" class="_button"></button>`)
+    }}
+    }
+
+      }
+  
+ 
+  
   for(let item in block){
     if(item === "position"){}
     else{
-      $(`.${block.position}`).append(`<button id = "${block[item]}" class="button1"></button>`)
+      $(`.${block.position}`).append(`<button id = "${block[item]}" class="${block.position}_button"></button>`)
     }
   }
   $("button").on("click", function () {

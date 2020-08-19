@@ -19,12 +19,12 @@
       },
       "id": "1",
       "isPopout": false,
-      "label": "",
+      "label": "test",
       "linked": false,
       "linkedUserId": "",
       "orientation": "Portrait",
       "type": "video_overlay",
-      "viewerType": "Broadcaster"
+      "viewerType": "Logged-In Viewer"
     }
   ],
   "manifest": {

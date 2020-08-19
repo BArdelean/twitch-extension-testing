@@ -26,7 +26,8 @@ class Server {
     this.viewerVotes = [];
     this.extSecret = Buffer.from(this.secret, "base64");
     this.curentVotingSection = null;
-    this.filteredVoteParams = null;
+    this.filteredCustomVoteParams = null;
+    this.filteredMvpParams = {}
     this.setVotingParams = {
       viewer_interaction: {
         custom_options: {
@@ -92,8 +93,8 @@ class Server {
     this.http = http.createServer(this.app);
     this.app.use("/", express.static(path.join(__dirname, "../public")));
     this.app.post("/control/set-vote-params", this.onSetVoteParams.bind(this));
-    this.app.post(
-      "/control/set-player-names",
+    
+    this.app.post("/control/set-player-names",
       this.onSetPlayerNames.bind(this)
     );
     this.app.post("/control/send-vote", this.onIncomingVote.bind(this));
@@ -107,9 +108,8 @@ class Server {
   stop() {
     this.http.close();
   }
-  onIncomingVote(req, res) {
-    console.log(req.body);
-        let viewerVote = JSON.parse(req.body);
+  async onIncomingVote(req, res) {
+    let viewerVote = JSON.parse(req.body);
     if (this.verifyAndDecode(req.headers.authorization)) {
       this.viewerVotes.push(viewerVote.vote);
     }
@@ -120,28 +120,30 @@ class Server {
     let voteParams = JSON.parse(data);
     this.setVotes = [];
     if ("custom_options" in voteParams.viewer_interaction) {
-      this.setVotingParams.viewer_interaction.custom_options =
-        voteParams.viewer_interaction.custom_options;
-      this.filteredVoteParams = Object.entries(
+      this.filteredCustomVoteParams = Object.entries(
         voteParams.viewer_interaction.custom_options
       ).reduce((a, [k, v]) => (v ? ((a[k] = v), a) : a), {});
-      delete this.filteredVoteParams.question;
-    }
-    if (voteParams.viewer_interaction.start_custom === true) {
-      this.sendBroadcast(this.filteredVoteParams);
-      delete this.filteredVoteParams.position;
+      delete this.filteredCustomVoteParams.question;
+      }
 
-      for (let item in this.filteredVoteParams) {
-        this.setVotes.push(this.filteredVoteParams[item]);
+    if (voteParams.viewer_interaction.start_custom === true) {
+      this.curentVotingSection = "start_custom"
+      this.sendBroadcast(this.filteredCustomVoteParams);
+      delete this.filteredCustomVoteParams.position;
+
+      for (let item in this.filteredCustomVoteParams) {
+        this.setVotes.push(this.filteredCustomVoteParams[item]);
       }
     } else if (voteParams.viewer_interaction.start_mvp === true) {
-      this.sendBroadcast(this.channel_id, this.playerNames);
+      this.curentVotingSection = "start_mvp"
+      this.sendBroadcast(this.playerNames);
     } else if (voteParams.viewer_interaction.stop_voting === true) {
       this.viewerVotes = [];
     }
     res.sendStatus(200);
   }
   onGetVoteResults(req, res) {
+    console.log(this.curentVotingSection)
     res.json(this.calculatePercentages());
     res.end();
   }
@@ -195,6 +197,7 @@ class Server {
       });
   }
   calculatePercentages() {
+
     if (this.viewerVotes.length >= 1) {
       this.setVotes.forEach((element, index) => {
         let f = 0;
@@ -203,12 +206,12 @@ class Server {
             f++;
           }
         }
-        console.log(f);
         if (this.viewerVotes.length === 0) {
           var percentage = 50;
         } else {
           percentage = (f / this.viewerVotes.length) * 100;
         }
+        if (this.curentVotingSection === "start_custom"){
         this.setVotingParams.viewer_interaction.custom_options[
           "option" + (index + 1)
         ] = element;
@@ -218,10 +221,18 @@ class Server {
         this.setVotingParams.viewer_interaction.custom_options[
           "image" + (index + 1)
         ] = "option" + (index + 1) + "_image";
+       }else if (this.curentVotingSection === "start_mvp"){
+        for(let team in this.setVotingParams.viewer_interaction.mvp_options) {
+        for(let i =4 ; i<=4;i++){
+           this.setVotingParams.viewer_interaction.mvp_options[team]["player"+(index+1)]=element
+           this.setVotingParams.viewer_interaction.mvp_options[team]["percentage"+(index+1)]=Number(percentage.toFixed(0));
+         }
+        }
+       }
       });
     }
     return this.setVotingParams;
-  }
+}
 }
 
 const server = new Server(8080);
