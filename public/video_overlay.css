@@ -97,19 +97,19 @@ body {
 
 .team1 {
   left: 4.9%;
-  bottom: 17.5%;
+  bottom: 25%;
   width: 34%;
-  height: 23%;
+  height: 15.5%;
   position: absolute;
   flex-direction: row;
   display: flex;
   justify-content: space-between;
 }
 .team2 {
-  right: 4.9%;
-  bottom: 17.5%;
-  width: 34%;
-  height: 23%;
+  right: 5%;
+  bottom: 25%;
+  width: 33.7%;
+  height: 15.5%;
   position: absolute;
   flex-direction: row;
   display: flex;
@@ -126,6 +126,16 @@ body {
   color: white;
   display: inline-block;
   cursor: pointer;
+}
+.clicked{
+  -webkit-animation: blink-clicked 1s infinite;
+  -moz-animation: blink-clicked 1s infinite;
+  -ms-animation: blink-clicked 1s infinite;
+  border: 4px solid;
+}
+
+.disabled{
+  border: none;
 }
 
 button:hover {
@@ -149,39 +159,67 @@ button:hover {
 
 @-webkit-keyframes blink {
   0% {
-    border-color: green;
+    border-color: transparent;
   }
   50% {
-    border-color: yellow;
+    border-color: #FFFF09;
   }
   100% {
-    border-color: green;
+    border-color: transparent;
   }
 }
 @-moz-keyframes blink {
   0% {
-    border-color: green;
+    border-color: transparent;
   }
   50% {
-    border-color: yellow;
+    border-color: #FFFF09;
   }
   100% {
-    border-color: green;
+    border-color: transparent;
   }
 }
 @-ms-keyframes blink {
   0% {
-    border-color: green;
+    border-color: transparent;
   }
   50% {
-    border-color: yellow;
+    border-color: #FFFF09;
   }
   100% {
-    border-color: green;
+    border-color: transparent;
   }
 }
-@keyframes border-pulse {
+@-webkit-keyframes blink-clicked {
+  0% {
+    border-color: transparent;
+  }
   50% {
-    border-color: rgba(255, 255, 255, 0);
+    border-color: #26BB50;
+  }
+  100% {
+    border-color: transparent;
+  }
+}
+@-moz-keyframes blink-clicked {
+  0% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #26BB50;
+  }
+  100% {
+    border-color: transparent;
+  }
+}
+@-ms-keyframes blink-clicked {
+  0% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #26BB50;
+  }
+  100% {
+    border-color: transparent;
   }
 }

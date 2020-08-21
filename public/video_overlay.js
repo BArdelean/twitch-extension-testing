@@ -1,21 +1,26 @@
+// Create variables for token
 var token = "";
-var uid = "";
 
+// Check if user is authorized
 window.Twitch.ext.onAuthorized(function (auth) {
   token = auth.token;
   uid = auth.userId;
 });
-function disableButton() {
+
+// Disable the buttons
+function changeBorder() {
   $(":button").prop("disabled", true);
-  $(".votes-container").html("");
 }
+
+// Update the block with data recieved from pubsub
 function updateBlock(payload) {
+  
   $(".votes-container").html("");
   let block = JSON.parse(payload);
   if (!block.position) {
     $(".votes-container").append(
       '<div class="team1"></div><div class="team2"></div>'
-    );
+    );  
     for (let player in block) {
       if (player <= 4) {
         $(".team1").append(
@@ -29,6 +34,9 @@ function updateBlock(payload) {
     }
   } else {
     if(block.position){
+      $(".votes-container").append(
+        `<div class="${block.position}"></div>`
+      );
     for (let item in block) {
       if (item === "position") {
       } else {
@@ -39,7 +47,8 @@ function updateBlock(payload) {
     }
   }}
   $("button").on("click", function () {
-    $(this).css('border-color: red, border: 4px solid')
+    $(this).addClass("clicked")
+    $("button").not(this).addClass("disabled")
     $.ajax({
       type: "POST",
       url: "http://localhost:8080/control/send-vote",
@@ -48,15 +57,17 @@ function updateBlock(payload) {
         Authorization: "Bearer " + token,
       },
       data: JSON.stringify({ vote: this.id }),
-      // success: disableButton,
+      success: changeBorder,
     });
   });
+
+//  Clear HTML if stop_voting is triggered
   if (block.stop_voting === true) {
     $(".votes-container").html("");
   }
 }
 $(function () {
-  // listen for incoming broadcast message from our EBS
+  // listen for incoming broadcast message from backend for curent channel
   window.Twitch.ext.listen("broadcast", function (
     target,
     contentType,

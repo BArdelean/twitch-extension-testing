@@ -9,7 +9,6 @@ const fs = require("fs");
 const { json } = require("express");
 const jsonwebtoken = require("jsonwebtoken");
 const got = require("got");
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 class Server {
   constructor(port = 8080) {
@@ -27,7 +26,6 @@ class Server {
     this.extSecret = Buffer.from(this.secret, "base64");
     this.curentVotingSection = String;
     this.filteredCustomVoteParams = null;
-    this.filteredMvpParams = {};
     this.setVotingParams = {
       viewer_interaction: {
         custom_options: {
@@ -111,17 +109,66 @@ class Server {
   }
   async onIncomingVote(req, res) {
     let viewerVote = JSON.parse(req.body);
-    console.log(viewerVote);
+
     if (this.verifyAndDecode(req.headers.authorization)) {
       this.viewerVotes.push(viewerVote.vote);
     }
+    console.log(this.viewerVotes)
     res.sendStatus(200);
   }
   onSetVoteParams(req, res) {
+
     let data = req.body;
     let voteParams = JSON.parse(data);
+    
+    if("start_custom" in voteParams.viewer_interaction || "start_mvp" in voteParams.viewer_interaction || "stop_voting" in voteParams.viewer_interaction){
+      
+    }
     this.setVotes = [];
     if ("custom_options" in voteParams.viewer_interaction) {
+      this.setVotingParams.viewer_interaction.custom_options = {
+        question: "",
+        position: "",
+        option1: "",
+        option2: "",
+        option3: "",
+        option4: "",
+        image1: "",
+        image2: "",
+        image3: "",
+        image4: "",
+        percentage1: "",
+        percentage2: "",
+        percentage3: "",
+        percentage4: "",
+      }
+      for (let i in this.setVotingParams.viewer_interaction.custom_options) {
+        for (let j in voteParams.viewer_interaction.custom_options) {
+          if (i === j) {
+            this.setVotingParams.viewer_interaction.custom_options[i] =
+              voteParams.viewer_interaction.custom_options[j];
+          }
+        }
+      }
+      let optionsParam = [];
+      for (let item in Object.keys(
+        voteParams.viewer_interaction.custom_options
+      )) {
+        if (
+          Object.keys(voteParams.viewer_interaction.custom_options)[
+            item
+          ].startsWith("option")
+        ) {
+          optionsParam.push(
+            Object.keys(voteParams.viewer_interaction.custom_options)[item]
+          );
+        }
+      }
+      optionsParam.forEach((element, index) => {
+        this.setVotingParams.viewer_interaction.custom_options[
+          "image" + (index + 1)
+        ] = element + "_image";
+      });
       this.filteredCustomVoteParams = Object.entries(
         voteParams.viewer_interaction.custom_options
       ).reduce((a, [k, v]) => (v ? ((a[k] = v), a) : a), {});
@@ -129,6 +176,7 @@ class Server {
     }
 
     if (voteParams.viewer_interaction.start_custom === true) {
+      this.viewerVotes = [];
       this.curentVotingSection = "start_custom";
       this.sendBroadcast(this.filteredCustomVoteParams);
       delete this.filteredCustomVoteParams.position;
@@ -137,25 +185,42 @@ class Server {
         this.setVotes.push(this.filteredCustomVoteParams[item]);
       }
     } else if (voteParams.viewer_interaction.start_mvp === true) {
+      this.viewerVotes = [];
       this.curentVotingSection = "start_mvp";
 
-      this.setVotes=this.playerNames.mvp_options.players
+      this.setVotes = this.playerNames.mvp_options.players;
       this.sendBroadcast(this.setVotes);
     } else if (voteParams.viewer_interaction.stop_voting === true) {
+      this.sendBroadcast({ stop_voting: true });
       this.viewerVotes = [];
+    } else if(voteParams.viewer_interaction.clear_data === true){
+      this.setVotingParams = {}
     }
-    console.log(this.curentVotingSection)
     res.sendStatus(200);
   }
   onGetVoteResults(req, res) {
-    console.log(this.curentVotingSection);
-    res.json(this.calculatePercentages());
+    this.calculatePercentages()
+    res.json(this.setVotingParams);
     res.end();
   }
 
   onSetPlayerNames(req, res) {
     let data = req.body;
     this.playerNames = JSON.parse(data);
+    this.playerNames.mvp_options.teams.forEach((element, index) =>  {
+      if (index < 1) {
+        this.setVotingParams.viewer_interaction.mvp_options.team1.team = this.playerNames.mvp_options.teams[index]
+      }else {
+        this.setVotingParams.viewer_interaction.mvp_options.team2.team = element
+      }
+    })
+    this.playerNames.mvp_options.players.forEach((element, index) =>  {
+      if (index <= 4) {
+        this.setVotingParams.viewer_interaction.mvp_options.team1["player" + (index + 1)] = element
+      }else {
+        this.setVotingParams.viewer_interaction.mvp_options.team2["player" + (index - 4)] = element
+      }
+    })
     res.sendStatus(200);
   }
   verifyAndDecode(header) {
@@ -195,7 +260,7 @@ class Server {
         body,
       })
       .then((resp) => {
-        console.log(resp.statuCode);
+        console.log(resp.statusCode);
       })
       .catch((err) => {
         console.log(err.response.body);
@@ -226,28 +291,24 @@ class Server {
             "image" + (index + 1)
           ] = "option" + (index + 1) + "_image";
         } else if (this.curentVotingSection === "start_mvp") {
-          // for (let team in this.setVotingParams.viewer_interaction
-          //   .mvp_options) {
- 
-          if(index <=4){
-              this.setVotingParams.viewer_interaction.mvp_options["team1"][
-                "player" + (index + 1)
-              ] = element;
-              this.setVotingParams.viewer_interaction.mvp_options["team1"][
-                "percentage" + (index + 1)
-              ] = Number(percentage.toFixed(0));
-            }else {
-               this.setVotingParams.viewer_interaction.mvp_options["team2"][
+          if (index <= 4) {
+            this.setVotingParams.viewer_interaction.mvp_options["team1"][
+              "player" + (index + 1)
+            ] = element;
+            this.setVotingParams.viewer_interaction.mvp_options["team1"][
+              "percentage" + (index + 1)
+            ] = Number(percentage.toFixed(0));
+          } else {
+            this.setVotingParams.viewer_interaction.mvp_options["team2"][
               "player" + (index - 4)
             ] = element;
             this.setVotingParams.viewer_interaction.mvp_options["team2"][
               "percentage" + (index - 4)
-            ] = Number(percentage.toFixed(0))}
-          
+            ] = Number(percentage.toFixed(0));
+          }
         }
       });
     }
-    return this.setVotingParams;
   }
 }
 
